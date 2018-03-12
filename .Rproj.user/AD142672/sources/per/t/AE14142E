@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1520830232997.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "986734741",
+    "id" : "AE14142E",
+    "lastKnownWriteTime" : 1520840421,
+    "last_content_update" : 1520840421054,
+    "path" : "C:/Users/CCSLAB1/Desktop/WCST/lookthrough.R",
+    "project_path" : "lookthrough.R",
+    "properties" : {
+        "cursorPosition" : "227,5",
+        "scrollLine" : "199",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

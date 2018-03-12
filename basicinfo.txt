@@ -1,0 +1,19 @@
+Data format:
+UTF-8 encoding
+1 row / subject
+No labels
+
+
+Column
+1 to 128 = deck choice (from left to right, 0 = empty trial)
+	min 110 to max 128
+129 to 256 = correct or not (1 or 0, -1 to be ignored)
+257 ~ = other information
+
+*
+Parameter  boundaries
+r = c(0, 1) #Reward feedback
+p = c(0, 1) #Punished feedback
+d = c(0.01, 5) #Decision consistency
+i = c(0.01, 5) #Attentional focus
+
