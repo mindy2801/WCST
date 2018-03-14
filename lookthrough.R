@@ -41,7 +41,7 @@ parbounds=c(0,0,.01,.01,1,1,5,5)  #lower boundaries for parameters r, p, d, i an
 
 if(sum(rownames(installed.packages())=="fOptions")==0)   #If the fOptions package is not installed, .
   install.packages("fOptions") 				#.install it now.  
-library(fOptions)  						#load fOptions into memory.
+library(fOptions)  						#load fOptions into memory. Needed for sobol sequence?
 
 rawdatamat=read.table(datname,encoding="UTF-8")  
 #If you receive an error after this line, then the datafile isn't being read in properly.
@@ -67,7 +67,7 @@ savelabel=paste("Code17b_",strtrim(datname,6),"_s",min(subjectsmodeled),"-",max(
 #define a set of 128 match matrices (3 dimensions x 4 decks x 128 trials)
 matchstack=array(rep(0,(3*4*128)),dim=c(3,4,128)) 
 correctdeckmat=read.table("correctdeck matrix.txt",header=1) #Using matrix.txt, creating anwser sheet
-for (i in 1:4) matchstack[,i,]=array(as.numeric(correctdeckmat[,]==i),dim=c(3,128)) #IMPORTANT TO UNDERSTAND
+for (i in 1:4) matchstack[,i,]=array(as.numeric(correctdeckmat[,]==i),dim=c(3,128)) #IMPORTANT TO UNDERSTAND THE DIMENSION
 
 stretchpars=function(opars) -log((ub-lb)/(opars-lb)-1)	#opars=original pars #WHAT IS IT DOING?
 contractpars=function(spars) (ub-lb)/(exp(-spars)+1)+lb		#spars=stretched pars
@@ -75,28 +75,32 @@ contractpars=function(spars) (ub-lb)/(exp(-spars)+1)+lb		#spars=stretched pars
 scale3to2=function(temppars) c(temppars[1],temppars[2]/(1-temppars[1]))
 #this takes a vector of 3 p's that would sum to 1 and rescales them into 2 pars that range from 0-1
 #this is done so optimization with range 0-1 can work.  e.g. (.6,.1,.3) -> (.6,.25)
+#MAYBE optimization needs 2 parameters while we use 3 elements in each attention vector?
 
 scale2to3=function(temppars)  c(temppars[1],(1-temppars[1])*temppars[2],1-temppars[1]+(temppars[1]-1)*temppars[2])
 #this takes a vector of 2 pars that range from 0-1 and transforms back to 3 p's that sum to 1
 
 powerrize=function(pow,tempvec) (tempvec^pow)/sum(tempvec^pow)
 #takes a vector, raises to a power, then rescales to sum to 1
+#MAYBE needed in i(f) value calculation?
 
-cattpredpfun=function(temppars,templength) 
-  #predicted probabilities assuming Constant Attention weights
+cattpredpfun=function(temppars,templength) #TEMPLENGTH=number of choices, from 110 to 128. Name comes from Constant ATTention?
+  #predicted probabilities assuming Constant Attention weights (BASELINE MODEL?)
   #temppars is a 3 parameter pars vector representing the attention weights to color, form, and number
 {
   tempmat=matrix(-1,ncol=templength,nrow=4)
-  for (temptrial in 1:templength) tempmat[,temptrial]=t(temppars%*%matchstack[,,temptrial])
+  for (temptrial in 1:templength) tempmat[,temptrial]=t(temppars%*%matchstack[,,temptrial]) #BASED ON MATCHSTACK, calculate attention weights proportional only to the number of matching dimensions
   tempmat
 }
 
 #vattpredpfun9 is an overarching all purpose model function calculating the predicted probability
 #takes parameters r, p, d, i ("i" might be called "g" or "f" in paper)
-#when trial>m the "aha" experience has occurred. globalm is a global variable
+#when trial>m the "aha" experience has occurred. globalm is a global variable #WHAT DOES IT MEAN?
 #freeletters is a vector of characters in any order for the free parameter letters
 #fixedvals is an ordered vector numbers that only matters for nonfree parameters
-#pequalsr is boolean for whether constraint p=r is true
+#pequalsr is boolean for whether constraint p=r is true #BOOLEAN=LOGICAL VALUE T/F
+#THIS FUNCTION IS USED IN optim function
+#temppars: temporary estimated parameterse for r, p, d, i. IF not free, then gives value of -1
 vattpredpfun9=function(temppars,freeletters,fixedvals,pequalsr,tempchoices,tempreinf) 
 {
   if(sum(freeletters=="r")>0) r=temppars[1] else r=fixedvals[1]
@@ -108,15 +112,15 @@ vattpredpfun9=function(temppars,freeletters,fixedvals,pequalsr,tempchoices,tempr
   templength=length(tempchoices)
   curatt=rep((1/3),3)
   subjattmat=matrix(nrow=3,ncol=templength)
-  predpmat=matrix(-1,nrow=4, ncol=templength)
+  predpmat=matrix(-1,nrow=4, ncol=templength) #FOR EACH DECK? predicted probability of selection for each deck?
   subjattmat[,1]=curatt
   for (temptrial in 1:(templength-1))
   {
     attmatchchoice=correctdeckmat[,temptrial]== tempchoices[,temptrial]
     doubleatt=curatt*.9999997+.0000001 #rescale to prevent rounding errors
-    if(tempreinf[,temptrial]==1) 
+    if(tempreinf[,temptrial]==1) #WHAT IS tempreinf?: PUT out correct or not information(1 is correct), thus, if correct then{}
     {
-      attsignal=powerrize(i,(attmatchchoice*doubleatt))
+      attsignal=powerrize(i,(attmatchchoice*doubleatt)) #POWERRIZING f?
       curatt=(1-r)*curatt+r*attsignal
     } else
     {
@@ -129,13 +133,13 @@ vattpredpfun9=function(temppars,freeletters,fixedvals,pequalsr,tempchoices,tempr
 }
 
 cattG2fun=function(pars2,tempchoices) #generates G2 for constant attention
-  #this takes the 2 parameter pars vector (because only two are free)
+  #this takes the 2 parameter pars vector (because only two are free) #WHAT ARE FREE PARAMETERS IN THIS MODEL? ISN'T IT NO FREE PARS?
 {
   temppars=scale2to3(pars2)
   templength=length(tempchoices)
-  tempchoiceprob=matrix(c(tempchoices==1,tempchoices==2,tempchoices==3,tempchoices==4),nrow=4,ncol=templength,byrow=TRUE)*(cattpredpfun(temppars,templength))
+  tempchoiceprob=matrix(c(tempchoices==1,tempchoices==2,tempchoices==3,tempchoices==4),nrow=4,ncol=templength,byrow=TRUE)*(cattpredpfun(temppars,templength)) #FOR CHOSEN DECK, gives that choice's probability
   tempchoiceprob=colSums(tempchoiceprob)
-  tempchoiceprob=tempchoiceprob[2:templength]*.9998+.0001		#removes trial 1 and rescales
+  tempchoiceprob=tempchoiceprob[2:templength]*.9998+.0001		#removes trial 1 and rescales #BECAUSE OF WHAT?
   return(-2*sum(log(tempchoiceprob)))
 }
 
@@ -168,7 +172,7 @@ for (ploop in 0:1) for (dloop in 0:1) for (iloop in 0:2) for (rloop in 0:1)
   freeparsmat[rowloop,2]=(if(ploop==0) "p" else "")
   freeparsmat[rowloop,3]=(if(dloop==0) "d" else "")
   freeparsmat[rowloop,4]=(if(iloop==0) "i" else "")
-  if(dloop==1) fixedvalsmat[rowloop,3]=1-1e-8 #WHAT IS THIS NUMBER?
+  if(dloop==1) fixedvalsmat[rowloop,3]=1-1e-8 #WHAT IS THIS NUMBER? Is it also for rounding error?
   if(iloop==1) fixedvalsmat[rowloop,4]=.0001
   if(iloop==2) fixedvalsmat[rowloop,4]=1
   if(rloop==1) fixedvalsmat[rowloop,1]=1
@@ -180,12 +184,12 @@ modnames=parnames
 modnames[freeparsmat[,"i"]==""]=paste(modnames[freeparsmat[,"i"]==""], round(fixedvalsmat[freeparsmat[,"i"]=="","i"],1),sep="")
   #when "i" colmun(4th) is empty, at that location within modnames, 1-digit round of feixedvalsmat's 4th column is pasted
 
-G2stack=array(rep(NA,(numsubj*itercolumns*24)),dim=c(numsubj,itercolumns,24)) #3*100*24, by each iteration(till 100) maybe store estimated parameter for each subject with 24 models?
+G2stack=array(rep(NA,(numsubj*itercolumns*24)),dim=c(numsubj,itercolumns,24)) #3*100*24, by each iteration(till 100) store G2 values of each of 24 models
 BICstack=array(rep(NA,(numsubj*itercolumns*24)),dim=c(numsubj,itercolumns,24)) 
 dimnames(G2stack)=list(paste("s",subjlabels,sep=""),paste("i",1:itercolumns,sep=""),paste("m",1:24,"_",modnames,sep=""))
 dimnames(BICstack)=list(paste("s", subjlabels,sep=""),paste("i",1:itercolumns,sep=""),paste("m",1:24,"_",modnames,sep=""))
 
-parstack=array(rep(NA,(numsubj*4*24)),dim=c(numsubj,4,24)) #3*4*24
+parstack=array(rep(NA,(numsubj*4*24)),dim=c(numsubj,4,24)) #3*4*24. store estimated pars(r,p,d,i) of each of 24 models
 dimnames(parstack)=list(paste("s",subjlabels,sep=""),c("r","p","d","i"),paste("m",1:24,"_",modnames,sep=""))
 presobelmat=sobelmat=runif.sobol(maxiter,4,1) #Uniform scrambled sobol sequence. WHAT IS SOBOL SEQUENCE?
 for (i in 1:4) sobelmat[,i]=presobelmat[,i]*(parbounds[i+4]-parbounds[i])+parbounds[i] #Using sobol number, recreating numbers within bound
@@ -198,8 +202,8 @@ for (cursubj in subjectsmodeled)	#loop across subjects
   curreinf=data.frame(rawdatamat[cursubj,129:(128+curlength)]) #put out correct or not
   deckobsp=c(mean(curchoices==1),mean(curchoices==2),mean(curchoices==3),mean(curchoices==4)) #mean of each choices
   deckobsf=deckobsp*curlength #frequency of each choices
-  deckbaseG2[cursubj]=-2*sum(deckobsf*log(deckobsp)) #WHAT IS IT DOING?
-  catt33G2[cursubj]=cattG2fun(scale3to2(rep((1/3),3)),curchoices) #WHAT IS IT DOING???? Why remove trial 1 and rescales?
+  deckbaseG2[cursubj]=-2*sum(deckobsf*log(deckobsp)) #Calculating deckbaseG2 for each subject
+  catt33G2[cursubj]=cattG2fun(scale3to2(rep((1/3),3)),curchoices) #Same as the above
   
   for (curmod in modelstorun)	#loop across models (different parameter constraints)
   {
@@ -212,16 +216,17 @@ for (cursubj in subjectsmodeled)	#loop across subjects
       pars4init=sobelmat[curiter,]
       spars4init=stretchpars(pars4init) #Why is stretching needed?
       tempmod=optim(spars4init,vattG2overarchfun,tempparbounds=parbounds,freeletters=freeparsmat[curmod,],fixedvals=fixedvalsmat[curmod,],pequalsr=pequalsrmat[curmod,],tempchoices=curchoices,tempreinf=curreinf,predpfun=vattpredpfun9,method="Nelder-Mead")
-      G2stack[cursubj,curiter,curmod]=tempmod$value #WHAT IS OPTIM FUNCTION?
+      #minimize G2. Below is the arguments of vattG2...function.
+      G2stack[cursubj,curiter,curmod]=tempmod$value #Generated G2 from above
       roundpars=round(contractpars(tempmod$par),3)					
       print(noquote(c("subj#=",cursubj," iter=",curiter," model=",modnames[curmod], "  -2LL=",round(tempmod$value,3) )))
       print(noquote(c("r=",roundpars[1],"  p=",roundpars[2],"  d=",roundpars[3],"   i=",roundpars[4])))
       print(noquote(""))
       flush.console()
       
-      if(curiter==1) parstack[cursubj,,curmod]=contractpars(tempmod$par) else
+      if(curiter==1) parstack[cursubj,,curmod]=contractpars(tempmod$par) else #???
       {
-        if(tempmod$value<min(G2stack[cursubj,1:curiter-1,curmod])) parstack[cursubj,,curmod]=contractpars(tempmod$par)
+        if(tempmod$value<min(G2stack[cursubj,1:curiter-1,curmod])) parstack[cursubj,,curmod]=contractpars(tempmod$par) #???
       }
       BICstack[cursubj,curiter,curmod]=G2stack[cursubj,curiter,curmod]+sum(freeparsmat[curmod,]!="")*log(curlength-1)
       if(curiter>=maxiter) contiter=FALSE

@@ -17,3 +17,17 @@ p = c(0, 1) #Punished feedback
 d = c(0.01, 5) #Decision consistency
 i = c(0.01, 5) #Attentional focus
 
+Model Names:
+deckbase: no free parameter. Always .25 probability of choosing each deck
+catt33: another baseline model. Constant .33 attention to each dimension.
+
+
+----
+*Sobol sequence:
+low discrepancy sequence
+	Discrepancy? 
+Low-discrepancy sequences, also known as “quasirandom” sequences, are numbers that are better equidistributed in a given volume than pseudo-random numbers. 
+
+*Stretching and contracting parameters: Why is it necessary?
+*Scaling parameters 3 to 2 or 2 to 3: why is it necessary?
+*optim function: optimization process? What to optimize?
