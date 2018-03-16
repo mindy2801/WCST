@@ -33,7 +33,7 @@ rm(list=ls(all=TRUE))  					#clears memory
 
 ### MODIFY THIS SECTION ###
 datname="WCST Sample data.txt"
-maxiter=100 				#Number of starting parameters to iterate through; default is 100
+maxiter=10 				#Number of starting parameters to iterate through; default is 100
 modelstorun=5    #lists the nested models that'll be run; #5 is the default, best fitting model in article; use "modelstorun=1:24" to run all (slower)
 parbounds=c(0,0,.01,.01,1,1,5,5)  #lower boundaries for parameters r, p, d, i and upper boundaries for parameters r, p, d, i
 #############################
@@ -67,9 +67,9 @@ savelabel=paste("Code17b_",strtrim(datname,6),"_s",min(subjectsmodeled),"-",max(
 #define a set of 128 match matrices (3 dimensions x 4 decks x 128 trials)
 matchstack=array(rep(0,(3*4*128)),dim=c(3,4,128)) 
 correctdeckmat=read.table("correctdeck matrix.txt",header=1) #Using matrix.txt, creating anwser sheet
-for (i in 1:4) matchstack[,i,]=array(as.numeric(correctdeckmat[,]==i),dim=c(3,128)) #IMPORTANT TO UNDERSTAND THE DIMENSION
+for (i in 1:4) matchstack[,i,]=array(as.numeric(correctdeckmat[,]==i),dim=c(3,128)) #CHANGE into 3*4*128 dimension. IMPORTANT TO UNDERSTAND THE DIMENSION
 
-stretchpars=function(opars) -log((ub-lb)/(opars-lb)-1)	#opars=original pars #WHAT IS IT DOING?
+stretchpars=function(opars) -log((ub-lb)/(opars-lb)-1)	#opars=original pars #TO SOLVE PROBLEM IN MLE
 contractpars=function(spars) (ub-lb)/(exp(-spars)+1)+lb		#spars=stretched pars
 
 scale3to2=function(temppars) c(temppars[1],temppars[2]/(1-temppars[1]))
@@ -82,10 +82,10 @@ scale2to3=function(temppars)  c(temppars[1],(1-temppars[1])*temppars[2],1-temppa
 
 powerrize=function(pow,tempvec) (tempvec^pow)/sum(tempvec^pow)
 #takes a vector, raises to a power, then rescales to sum to 1
-#MAYBE needed in i(f) value calculation?
 
-cattpredpfun=function(temppars,templength) #TEMPLENGTH=number of choices, from 110 to 128. Name comes from Constant ATTention?
-  #predicted probabilities assuming Constant Attention weights (BASELINE MODEL?)
+
+cattpredpfun=function(temppars,templength) 
+  #predicted probabilities assuming Constant Attention weights
   #temppars is a 3 parameter pars vector representing the attention weights to color, form, and number
 {
   tempmat=matrix(-1,ncol=templength,nrow=4)
@@ -111,35 +111,35 @@ vattpredpfun9=function(temppars,freeletters,fixedvals,pequalsr,tempchoices,tempr
   
   templength=length(tempchoices)
   curatt=rep((1/3),3)
-  subjattmat=matrix(nrow=3,ncol=templength)
-  predpmat=matrix(-1,nrow=4, ncol=templength) #FOR EACH DECK? predicted probability of selection for each deck?
-  subjattmat[,1]=curatt
+  subjattmat=matrix(nrow=3,ncol=templength) #FOR EACH DIMENSION, assign attention
+  predpmat=matrix(-1,nrow=4, ncol=templength) #FOR EACH DECK. predicted probability of selection for each deck?
+  subjattmat[,1]=curatt #START POINT
   for (temptrial in 1:(templength-1))
   {
-    attmatchchoice=correctdeckmat[,temptrial]== tempchoices[,temptrial]
+    attmatchchoice=correctdeckmat[,temptrial]== tempchoices[,temptrial] #INDEX current choice match which dimension of the answer
     doubleatt=curatt*.9999997+.0000001 #rescale to prevent rounding errors
-    if(tempreinf[,temptrial]==1) #WHAT IS tempreinf?: PUT out correct or not information(1 is correct), thus, if correct then{}
+    if(tempreinf[,temptrial]==1) #tempreinf: PUT out correct or not information(1 is correct), thus, if correct then{}
     {
-      attsignal=powerrize(i,(attmatchchoice*doubleatt)) #POWERRIZING f?
+      attsignal=powerrize(i,(attmatchchoice*doubleatt)) #assign attention weight to the matched dimension, and then POWERRIZING by f value
       curatt=(1-r)*curatt+r*attsignal
     } else
     {
-      attsignal=powerrize(i,((1-attmatchchoice)*doubleatt))
+      attsignal=powerrize(i,((1-attmatchchoice)*doubleatt)) #IF wrong, use punish parameter
       curatt=(1-p)*curatt+p*attsignal
     }
-    predpmat[,temptrial+1]=t(powerrize(d,curatt)%*%matchstack[,,temptrial+1])
+    predpmat[,temptrial+1]=t(powerrize(d,curatt)%*%matchstack[,,temptrial+1]) #BASED on attention calculated right before, predict next deck choice
   }
   return(predpmat)
 }
 
 cattG2fun=function(pars2,tempchoices) #generates G2 for constant attention
-  #this takes the 2 parameter pars vector (because only two are free) #WHAT ARE FREE PARAMETERS IN THIS MODEL? ISN'T IT NO FREE PARS?
+  #this takes the 2 parameter pars vector (because only two are free) #WHAT ARE FREE PARAMETERS IN THIS MODEL? ISN'T IT NO FREE PARS??
 {
   temppars=scale2to3(pars2)
   templength=length(tempchoices)
   tempchoiceprob=matrix(c(tempchoices==1,tempchoices==2,tempchoices==3,tempchoices==4),nrow=4,ncol=templength,byrow=TRUE)*(cattpredpfun(temppars,templength)) #FOR CHOSEN DECK, gives that choice's probability
   tempchoiceprob=colSums(tempchoiceprob)
-  tempchoiceprob=tempchoiceprob[2:templength]*.9998+.0001		#removes trial 1 and rescales #BECAUSE OF WHAT?
+  tempchoiceprob=tempchoiceprob[2:templength]*.9998+.0001		#removes trial 1 and rescales #BECAUSE OF WHAT??
   return(-2*sum(log(tempchoiceprob)))
 }
 
@@ -202,8 +202,8 @@ for (cursubj in subjectsmodeled)	#loop across subjects
   curreinf=data.frame(rawdatamat[cursubj,129:(128+curlength)]) #put out correct or not
   deckobsp=c(mean(curchoices==1),mean(curchoices==2),mean(curchoices==3),mean(curchoices==4)) #mean of each choices
   deckobsf=deckobsp*curlength #frequency of each choices
-  deckbaseG2[cursubj]=-2*sum(deckobsf*log(deckobsp)) #Calculating deckbaseG2 for each subject
-  catt33G2[cursubj]=cattG2fun(scale3to2(rep((1/3),3)),curchoices) #Same as the above
+  deckbaseG2[cursubj]=-2*sum(deckobsf*log(deckobsp)) #Calculating deckbaseG2 for each subject. G2=likelihood under H0(no GOF, df=free pars)
+  catt33G2[cursubj]=cattG2fun(scale3to2(rep((1/3),3)),curchoices) #Same as the above. scale3to2 is used only once here.
   
   for (curmod in modelstorun)	#loop across models (different parameter constraints)
   {
