@@ -1,8 +1,4 @@
-http://rpubs.com/CCSL/hBayesDM
-https://github.com/CCS-Lab/hBayesDM
-https://github.com/stan-dev/rstan/wiki/Installing-RStan-on-Windows
-http://mc-stan.org/
-  
-library(hBayesDM)
-prl_rp
-Reward-Punishment Model (Ouden et al., 2013, Neuron)
+dataPath = system.file("extdata/prl_exampleData.txt", package="hBayesDM")
+exmp <- read.table(dataPath, header=T)
+str(exmp); head(exmp)
+  #20 Subjects, 1-100 Trials, 1-2 choice, 1 or -1 outcome
