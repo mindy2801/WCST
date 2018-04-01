@@ -1,0 +1,6 @@
+Strange thing: for restricted model(with fixed values), the estimated parameters actually do not have that fixed values.
+
+I think it's because the program body ends with "contractpars", but  still. doesn't it have to be the same value across all subjects? Also, when I 'stretchpars' the estimated values, they still do not have the original fixed value. For example, m5(rpd1), i should have value 1. However, each subject has different values and stretching them do not make them to be 1.
+
+As for the program body, it has overlapped structure: program body minimizes the value of "vattG2overarchfun", which uses "vattpredpfun9" using temporary parameters within "optim". So the last part, "vattpredpfun9" is where fixed values are used, but those fixed values seem to be only used in "vattpredpfun9", not assigning the fixed values to temporary parameters(within "optim"). Maybe is it the reason why there's a problem? I'm not sure if I understood the structure of optim function correctly.
+

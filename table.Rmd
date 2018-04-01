@@ -1,0 +1,82 @@
+
+#Replicating Tables within the paper
+##Table.2 Mean BIC for 24 Models
+```{r echo=FALSE}
+load("Code17b_WCST S_s1-3_iter100.Rdata")
+    options(knitr.kable.NA = '')
+
+meanBIC <- colMeans(BICfinalmat); meanBIC
+r=rep(c("free","fixed"),12); r <- as.factor(r)
+p=c(rep("free",12),rep("fixed",12)); p <- as.factor(p)
+d=rep(c(rep("free",6),rep("fixed",6)),2); d <- as.factor(d)
+f=rep(c(rep("free",2),rep(0,2),rep(1,2)),4); f <- as.factor(f)
+t2 <- data.frame(meanBIC, r, p, d, f)
+t2_nr <- t2[t2$r=="free",]; t2_nr <- t2_nr[,-2]
+
+vars <- t2_nr[,1]
+v1 <- c(vars[c(1,4,7,10)])
+v2 <- c(vars[c(2,5,8,11)])
+v3 <- c(vars[c(3,6,9,12)])
+vars <- data.frame(v1, v2, v3, c(mean(deckbaseBIC),NA,NA,NA))
+colnames(vars)<-c("f free", "f = 0", "f = 1", "Baseline model")
+
+row_vars <- data.frame(v1=c(rep("p free", 2),rep("p = r", 2)),v2=c(rep(c("d free", "d = 1"),2)),vars)
+
+kable(row_vars, format="html", col.names=c("","",colnames(vars)), caption="Table 2", algin="l") %>%
+  kable_styling(bootstrap_options = "striped",
+                full_width = F) %>%
+  collapse_rows(columns=1:2) %>%
+  add_header_above(c("Model constraints"=6))
+  
+  
+kable(meanPar, format = "html", ,caption = "Table 3.1", align="l") %>%
+  kable_styling(bootstrap_options = "striped",
+                full_width = F) %>%
+  add_header_above(c("Group"=1, "Parameters" = 3)) %>%
+  group_rows("Mean", 1,1)
+
+```
+
+##Fig.2 Observed Scores for categories completed/presev error/nonperserv error/set failures
+```
+```
+
+##Fig.2 Model Simulation
+```
+```
+
+##Table.3 Mean Parameters for rpd1 Model
+```{r echo=FALSE}
+
+
+##Table.3.1
+meanPar <- colSums(parstack[,1:3,5]); meanPar <- t(meanPar)
+rownames(meanPar) <- c("Overall"); meanPar
+
+library(knitr)
+library(kableExtra)
+
+kable(meanPar, format = "html", ,caption = "Table 3.1", align="l") %>%
+  kable_styling(bootstrap_options = "striped",
+                full_width = F) %>%
+  add_header_above(c("Group"=1, "Parameters" = 3)) %>%
+  group_rows("Mean", 1,1)
+
+
+##Table.3.2
+control <- parstack[1,1:3,5]; control
+SDI <- colMeans(parstack[2:3,1:3,5]); SDI
+
+t3 <- data.frame(control=control, SDI=SDI); t3
+t <- t(t3)
+t3 <- as.data.frame(t)
+
+kable(t3, format = "html", ,caption = "Table 3.2", align="l") %>%
+  kable_styling(bootstrap_options = "striped",
+                full_width = F) %>%
+  add_header_above(c("Group"=1, "Parameters" = 3)) %>%
+  group_rows("Mean", 1,2)
+
+
+
+```
