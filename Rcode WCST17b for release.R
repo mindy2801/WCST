@@ -38,9 +38,9 @@
 rm(list=ls(all=TRUE))  					#clears memory
 
 ### MODIFY THIS SECTION ###
-datname="WCST Sample data.txt"
+datname="choices correct Bechara SDIandcontrols.txt"
 maxiter=100 				#Number of starting parameters to iterate through; default is 100
-modelstorun=1:24    #lists the nested models that'll be run; #5 is the default, best fitting model in article; use "modelstorun=1:24" to run all (slower)
+modelstorun=5    #lists the nested models that'll be run; #5 is the default, best fitting model in article; use "modelstorun=1:24" to run all (slower)
 parbounds=c(0,0,.01,.01,1,1,5,5)  #lower boundaries for parameters r, p, d, i and upper boundaries for parameters r, p, d, i
 #############################
 
@@ -57,6 +57,8 @@ rawdatamat=read.table(datname,encoding="UTF-8")
 #If that does not fix the problem, try opening the file in MS Word (using windows default encoding), 
 #delete the unusual characters, and then resave it (again using windows default encoding).
 
+rawdatamat[,257] <- 1:88
+rawdatamat[,258] <- c(rep("SDI",39),rep("Control", 88-39))
 subjlabels=rawdatamat[,257]				#reads extra information in datafile if available
 subjgroup= rawdatamat[,258]
 

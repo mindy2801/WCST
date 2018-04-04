@@ -42,6 +42,7 @@ kable(row_vars, format="html", col.names=c("","",colnames(vars)), caption="Table
 ```{r}
 
 #calculate categories completed
+
 subj_catecom <- c()
 for (subj in subjectsmodeled){
   inf <- data.frame(rawdatamat[subj,129:(128+lengthvec[subj])])
@@ -56,9 +57,10 @@ for (subj in subjectsmodeled){
 }
 
   ##data frame
-  control_catecom <- subj_catecom[1]
-  sdi_catecom <- mean(subj_catecom[2:3])
-  subj_catecom <- data.frame(group=c("Control", "SDI"), score=rep("Categoreis Completed",2), value=c(control_catecom, sdi_catecom))
+  sdi_catecom <- mean(subj_catecom[1:39])
+  control_catecom <- mean(subj_catecom[40:88])
+  mean_catecom <- c(sdi_catecom, control_catecom)
+  subj_catecom_dat <- data.frame(group=c("SDI", "Control"), score=rep("Categoreis Completed",2), value=mean_catecom)
 
 #persev.error
 print("Not Ready Yet...have to see how to calculate this error")
@@ -81,19 +83,21 @@ for (subj in subjectsmodeled){
 }
 
   ##data frame
-  control_failure <- subj_failure[1]
-  sdi_failure <- mean(subj_failure[2:3])
-  subj_failure <- data.frame(group=c("Control", "SDI"), score=rep("Set Failures",2), value=c(control_failure, sdi_failure))
-
+  sdi_failure <- mean(subj_failure[1:39])
+  control_failure <- mean(subj_failure[40:88])
+  mean_failure <- c(sdi_failure, control_failure)
+  subj_failure_dat <- data.frame(group=c("SDI", "Control"), score=rep("Set Failures",2), value=mean_failure)
 
 #integrate
-sd <- c(sd(subj_catecom[,"value"]), sd(subj_failure[,"value"])) 
-sd <- rep(sd, each=2)
-total <- rbind(subj_catecom, subj_failure); total <- cbind(total, sd)
+catecom_sd <- c(sd(subj_catecom[1:39]),sd(subj_catecom[40:88]))
+failure_sd <- c(sd(subj_failure[1:39]),sd(subj_failure[40:88]))
+sd <- c(catecom_sd, failure_sd)
+total <- rbind(subj_catecom_dat, subj_failure_dat); total <- cbind(total, sd)
 
+```
 
-
-#graph
+####graph of the errors
+```{r}
 library(ggplot2)
 
 bp <- ggplot(total, aes(x=score, y=value, fill=group)) + 
@@ -104,10 +108,10 @@ bp <- ggplot(total, aes(x=score, y=value, fill=group)) +
 bp + labs(title="(A) Observed Data", x="", y="Observed Value") +
    scale_fill_manual(values=c('black','white'), guide = guide_legend(title=NULL)) + 
    theme_classic() +
-   theme(legend.position = c(0.75,0.75))
+   theme(legend.position = c(0.75,0.75)) +
+   scale_y_continuous(expand = c(0, 0), limits = c(0, 6.5)) #for deleting the space of x-axis. It cuases problem now because of 0 value of "Set Failures"
 
-   #scale_y_continuous(expand = c(0, 0), limits = c(0, 6.5)) for deleting the space of x-axis. It cuases problem now because of 0 value of "Set Failures"
-
+bp
 ```
 
 
