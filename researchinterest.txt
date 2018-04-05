@@ -1,0 +1,14 @@
+간단한 depression measurement(task), even available through internet(ADO 활용)
+computational modeling을 통해 measurement의 validity를 확인하고 보급하고자 하는데 의미를 둠
+task base: something that is widely used with depression patients?
+	give a situation that a failure/success happens
+	make the participant choose how much responsibility lies for the participant(continuous)
+
+...and other measures (such as self efficacy or etc...)
+
+1. 설문지를 통해 obtain descriptive results
+2. through the rawdata, disentangle related cognitive parameters
+3. design computational task
+4. analyze with parameter estimation
+
+Later, with fmri or etc. check validity in accordance with other results.
