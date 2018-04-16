@@ -1,18 +1,10 @@
-#For hypothesized model
-
-  #For 88 subjects
-
-    #100 iterations
-      #MLE model that returns sum of -LL
-      #Optimize the -LL from MLE model
-
-    #Stack parameters
-    #Calculate BIC
+##What's left?
+##1. create BIC table from created data
+##2. create compact results
+##3. Run simulation with model 5 and compare the result
 
 
-########
 
-#For baseline model
 rm(list=ls())
 source("probability.R")
 
@@ -23,98 +15,161 @@ subjlabels=rawdatamat[,257]				#reads extra information in datafile if available
 subjgroup= rawdatamat[,258]
 
 #Set simulation conditions
-maxiter <- 10
+maxiter <- 5
 maxsubj <- nrow(rawdatamat)
 lengthvec <- 128-rowSums(rawdatamat[,1:128]==0)
+modelstorun <- 5
 
 parbounds <- c(0,0,.01,.01,1,1,5,5)  #boundaries for r, p, d, i
   lb=parbounds[1:4]
   ub=parbounds[5:8]
 
+stretchpars=function(opars) -log((ub-lb)/(opars-lb)-1)	#opars=original pars
+contractpars=function(spars) (ub-lb)/(exp(-spars)+1)+lb		#spars=stretched pars
+
+
+  
 #Generate Model Names
 
 freeparsmat <- expand.grid(r=c("r",""),i=c("i","0","1"),d=c("d",""),p=c("p",""))
+  freeparsmat <- as.matrix(freeparsmat)
   freeparsmat <- freeparsmat[,c(1,4,3,2)] #Needed to match the sequence as the original one.
 
 fixedvalsmat <- expand.grid(r=c(-1,1),i=c(-1,0.0001,1-1e-8),d=c(-1,1),p=c(-1,1)) # -1 means free parameter
+  fixedvalsmat <- as.matrix(fixedvalsmat)
   fixedvalsmat <- fixedvalsmat[,c(1,4,3,2)]
 
-pequalsrmat <- fixedvalsmat$p
-  modnames <- apply(freeparsmat, 1, paste, collapse="")
+pequalsrmat <- fixedvalsmat[,"p"]
+  pequalsrmat[pequalsrmat==-1] <- 0
+modnames <- apply(freeparsmat, 1, paste, collapse="")
 
 #Initailize stacks
 
-twoLLstack <- array(NA, c(maxsubj, 1, 1)) #row is subj, col is LL, dim is number of models
-parstack <- array(NA, c(maxsubj, 4, 1)) #col is parameters
+twoLLstack <- array(rep(NA,(maxsubj*maxiter*24)),dim=c(maxsubj,maxiter,24)) #row is subj, col is LL, dim is number of models
+BICstack=array(rep(NA,(maxsubj*maxiter*24)),dim=c(maxsubj,maxiter,24)) 
+
+parstack <- array(NA, c(maxsubj, 4, 24)) #col is parameters
+finalLLstack <- array(NA, dim=c(maxsubj,1,24))
+finalBICstack <- array(NA, dim=c(maxsubj,1,24))
+
+##For hypothesized models
 
 
-#Calculate information criteria for baseline model
+#Run simulations
+
+for (cursubj in 1:maxsubj){ #for 88 subjects
+
+  
+  curlength=lengthvec[cursubj]
+  curchoices=data.frame(rawdatamat[cursubj,1:curlength])
+  curreinf=data.frame(rawdatamat[cursubj,129:(128+curlength)])
+  
+  for (curmod in modelstorun){  #for 24 models
+    
+    temppars <- runif(4)*ub
+    setmod <- optim(temppars, vattG2overarchfun, freeletters=freeparsmat[curmod,],fixedvals=fixedvalsmat[curmod,],
+                     pequalsr=pequalsrmat[curmod],tempchoices=curchoices,tempreinf=curreinf,predpfun=vattpredpfun9, 
+                     method="Nelder-Mead") #abnormal termination happens with L-BFGS-B. have to manually re-range parameters
+    
+    for (curiter in 1:maxiter){ #run 100 iterations. Optimize the -LL from MLE model
+
+      temppars <- runif(4)*ub
+      tempmod <- optim(temppars, vattG2overarchfun, freeletters=freeparsmat[curmod,],fixedvals=fixedvalsmat[curmod,],
+                       pequalsr=pequalsrmat[curmod],tempchoices=curchoices,tempreinf=curreinf,predpfun=vattpredpfun9, 
+                       method="Nelder-Mead") #abnormal termination happens with L-BFGS-B. have to manually re-range parameters
+      
+      twoLLstack[cursubj,curiter,curmod] <- tempmod$value
+      BICstack[cursubj,curiter,curmod] <- tempmod$value+sum(freeparsmat[curmod,]!="")*log(curlength-1)
+        
+      if (tempmod$value < setmod$value){ #Stack parameters
+        setmod <- tempmod}
+      
+      roundpars <- round(contractpars(tempmod$par),3)
+      print(noquote(c("subj#=",cursubj," iter=",curiter," model=",modnames[curmod], "  -2LL=",round(tempmod$value,3) )))
+      print(noquote(c("r=",roundpars[1],"  p=",roundpars[2],"  d=",roundpars[3],"   i=",roundpars[4])))
+      print(noquote(""))
+      flush.console()
+      
+      
+    } #iteration loop
+    
+    #Calculate information criteria
+    parstack[cursubj,,curmod] <- contractpars(setmod$par)
+    finalLLstack[cursubj,,curmod] <- setmod$value
+    finalBICstack[cursubj,,curmod] <- tempmod$value+sum(freeparsmat[curmod,]!="")*log(curlength-1)
+      
+  } #model loop
+  
+  
+
+} #subject loop
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##For baseline model
+#Calculate information criteria for baseline model. case3로 해보자!
+deckbaseG2 <- c()
+deckbaseG2_DY <- c()
+catt33G2 <- c()
+deckbaseBIC <- c()
+
+for(cursubj in 1:maxsubj){
+  
+  curlength=lengthvec[cursubj]
+  curchoices=data.frame(rawdatamat[cursubj,1:curlength])
+  curreinf=data.frame(rawdatamat[cursubj,129:(128+curlength)])
+  
+  deckobsf <- c() 
+  for (i in 1:4){deckobsf[i] <- c(sum(curchoices==i))}
+  deckexpf <- sum(deckobsf)*c(1/4,1/4,1/4,1/4) #Expected frequency assuming independence
+  deckobsp <- deckobsf/lengthvec[cursubj]
+  
+  deckbaseG2[cursubj]=-2*sum(deckobsf*log(deckobsp)) #original code 지금 이건 loglikelihood랑 g2를 섞은것 같은데...
+  deckbaseG2_DY[cursubj] <- -2*lengthvec[cursubj]*log(0.25)
+  catt33G2[cursubj]=cattG2fun(rep((1/3),3),curchoices) #G2 아니고 2LL임. attention에 따라 deckchoice probability를 준 뒤, 그 probability를 case3
+  deckbaseBIC[cursubj]=deckbaseG2[cursubj]+3*log(curlength-1) #왜 1개 빼지? cattg2fun에서도 그러던데..그럼 deckbaseg2에서도 빼야하는거 아님?
+  
+  
+}
+
+
+########여기서부터 내 실습
+cursubj <- 1
 
 curlength=lengthvec[cursubj]
 curchoices=data.frame(rawdatamat[cursubj,1:curlength])
 curreinf=data.frame(rawdatamat[cursubj,129:(128+curlength)])
 
+deckbaseG2 <- c()
+catt33G2 <- c()
+deckbaseBIC <- c()
+
 deckobsf <- c() 
-  for (i in 1:4){deckobsf[i] <- c(sum(curchoices==i))}
-deckexpf <- sum(deckobsf)*c(1/4,1/4,1/4,1/4) #Expected frequency based on independence
+for (i in 1:4){deckobsf[i] <- c(sum(curchoices==i))}
+deckexpf <- sum(deckobsf)*c(1/4,1/4,1/4,1/4) #Expected frequency assuming independence
+deckobsp <- deckobsf/lengthvec[cursubj]
+
+##Case1. original code
+deckbaseG2[cursubj]=-2*sum(deckobsf*log(deckobsp)) #original code 지금 이건 loglikelihood랑 g2를 섞은것 같은데...
+catt33G2[cursubj]=cattG2fun(rep((1/3),3),curchoices) #G2 아니고 2LL임. attention에 따라 deckchoice probability를 준 뒤, 그 probability를 case3
+deckbaseBIC[cursubj]=deckbaseG2[cursubj]+3*log(curlength-1) #왜 1개 빼지? cattg2fun에서도 그러던데..그럼 deckbaseg2에서도 빼야하는거 아님?
+
+##Case2. from what I know. assuming independence. 이건 카이제곱에 대한 statistic을 주는 것 같음. 자유도가 몇이지?
 2*sum(deckobsf*log(deckobsf/deckexpf))
 
-deckobsp=c(mean(curchoices==1),mean(curchoices==2),mean(curchoices==3),mean(curchoices==4))
-deckobsf=deckobsp*curlength
-expected.count <- sum(deckobsf)*c(1/4,1/4,1/4,1/4)
-
-##NEED TO CHECK 멀티노미얼 이용해서 likelihood 직접 계산해야하는 거 아닌가?????????????
-deckbaseG2[cursubj]=-2*sum(deckobsf*log(deckobsp)) #original code 지금 이건 loglikelihood랑 g2를 섞은것 같은데...
-
-deckobsf <- c()  #What I think
-for (i in 1:4){deckobsf[i] <- c(sum(curchoices==i))}
-deckexpf <- sum(deckobsf)*c(1/4,1/4,1/4,1/4) #Expected frequency based on independence 
-2*sum(deckobsf*log(deckobsf/deckexpf)) #이게 모든 덱을 랜덤하게 선택했을 때를 영가설로 잡은 g2 아닌가?
-sum(deckobsf/lengthvec[cursubj])
+##Case3. choice에 대한 probability sum.  lengthvec*log(0.25) 이게 single trial에 대한 multinomial을 우도함수로 사용한 것인듯?
+-2*lengthvec[cursubj]*log(0.25)
 
 ##
-
-catt33G2[cursubj]=cattG2fun(scale3to2(rep((1/3),3)),curchoices)
-deckbaseBIC[cursubj]=deckbaseG2[cursubj]+3*log(curlength-1)
-
-
-#Run simulations
-for (subj in 1:maxsubj){
-
-  temppars <- runif(4)*ub
-  
-  curlength=lengthvec[subj]
-  curmod <- 5 #
-  curchoices=data.frame(rawdatamat[subj,1:curlength])
-  curreinf=data.frame(rawdatamat[subj,129:(128+curlength)])
-  
-  temppars <- runif(4)*ub
-  setmod <- optim(temppars, vattG2overarchfun, freeletters=freeparsmat[curmod,],fixedvals=fixedvalsmat[curmod,],pequalsr=pequalsrmat[curmod,],
-                  tempchoices=curchoices,tempreinf=curreinf,predpfun=vattpredpfun9, lower=lb, upper=ub, method="L-BFGS-B")
-  
-  
-    for (iter in 1:maxiter){ 
-      temppars <- runif(4)*ub
-      tempmod <- optim(temppars, vattG2overarchfun, freeletters=freeparsmat[curmod,],fixedvals=fixedvalsmat[curmod,],pequalsr=pequalsrmat[curmod,],
-                       tempchoices=curchoices,tempreinf=curreinf,predpfun=vattpredpfun9, lower=lb, upper=ub, method="L-BFGS-B")
-      
-      if (tempmod$value < setmod$value){
-        setmod <- tempmod
-      }
-      twoLLstack[subj,,] <- setmod$value
-      parstack[subj,,] <- setmod$par
-    }
-    
-}
-  
-
-optim(temppars, vattG2overarchfun, freeletters=freeparsmat[curmod,],fixedvals=fixedvalsmat[curmod,],pequalsr=pequalsrmat[curmod,],
-                  tempchoices=curchoices,tempreinf=curreinf,predpfun=vattpredpfun9,lower=lb, upper=ub, method="L-BFGS-B") 
-
-optim(temppars, vattG2overarchfun, freeletters=freeparsmat[curmod,],fixedvals=fixedvalsmat[curmod,],pequalsr=pequalsrmat[curmod,],
-      tempchoices=curchoices,tempreinf=curreinf,predpfun=vattpredpfun9, method="Nelder-Mead") 
-
-k <-
-N <- #subj number?
-tBIC <- colSums(twoLLstack) + log(N)*k
-tpar <- colMeans(parstack)

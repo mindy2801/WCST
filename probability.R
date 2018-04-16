@@ -18,7 +18,7 @@ cattpredp <- matrix(NA, ncol=128, nrow=4)
 
 cattG2fun=function(temppars,tempchoices){ #attention pars(3)
   templength=length(tempchoices)
-  tempchoiceprob=matrix(c(tempchoices==1,tempchoices==2,tempchoices==3,tempchoices==4),nrow=4,ncol=templength,byrow=TRUE)*(cattpredp[,length(tempchoices)])
+  tempchoiceprob=matrix(c(tempchoices==1,tempchoices==2,tempchoices==3,tempchoices==4),nrow=4,ncol=templength,byrow=TRUE)*(cattpredp[,1:length(tempchoices)])
   tempchoiceprob=colSums(tempchoiceprob)
   tempchoiceprob=tempchoiceprob[2:templength]*.9998+.0001		#removes trial 1 and rescales. why?
   return(-2*sum(log(tempchoiceprob)))
@@ -30,6 +30,9 @@ cattG2fun=function(temppars,tempchoices){ #attention pars(3)
   #freeletters = c("i")... a vector of characters in any order for the free parameter letters
   #fixedvals = an ordered vector numbers that only matters for nonfree parameters
   #pequalsr = T/F for whether constraint p=r is true
+
+
+
 vattpredpfun9=function(temppars,freeletters,fixedvals,pequalsr,tempchoices,tempreinf){
   if("r" %in% freeletters) r=temppars[1] else r=fixedvals[1]
   if("p" %in% freeletters) p=temppars[2] else p=fixedvals[2] 
