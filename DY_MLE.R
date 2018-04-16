@@ -1,7 +1,7 @@
 ##What's left?
-##1. create BIC table from created data
-##2. create compact results
-##3. Run simulation with model 5 and compare the result
+
+##2. create compact results with matrix
+##3. Run simulation with model 5 and compare the result (parameters)
 
 
 
@@ -9,7 +9,7 @@ rm(list=ls())
 source("probability.R")
 
 #Set data
-datname="WCST Sample data.txt"
+datname="managed sample data.txt"
 rawdatamat=read.table(datname,encoding="UTF-8")  
 subjlabels=rawdatamat[,257]				#reads extra information in datafile if available
 subjgroup= rawdatamat[,258]
@@ -166,8 +166,6 @@ deckbaseG2[cursubj]=-2*sum(deckobsf*log(deckobsp)) #original code 지금 이건 
 catt33G2[cursubj]=cattG2fun(rep((1/3),3),curchoices) #G2 아니고 2LL임. attention에 따라 deckchoice probability를 준 뒤, 그 probability를 case3
 deckbaseBIC[cursubj]=deckbaseG2[cursubj]+3*log(curlength-1) #왜 1개 빼지? cattg2fun에서도 그러던데..그럼 deckbaseg2에서도 빼야하는거 아님?
 
-##Case2. from what I know. assuming independence. 이건 카이제곱에 대한 statistic을 주는 것 같음. 자유도가 몇이지?
-2*sum(deckobsf*log(deckobsf/deckexpf))
 
 ##Case3. choice에 대한 probability sum.  lengthvec*log(0.25) 이게 single trial에 대한 multinomial을 우도함수로 사용한 것인듯?
 -2*lengthvec[cursubj]*log(0.25)
