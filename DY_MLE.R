@@ -1,9 +1,8 @@
 ##What's left?
 
-##2. create compact results with matrix
-##3. Run simulation with model 5 and compare the result (parameters)
-
-
+##Compare results with tables
+##Compare results of contrained model with decent iterations
+##Check sdi group for sd_parameters
 
 rm(list=ls())
 source("probability.R")
@@ -15,8 +14,8 @@ subjlabels=rawdatamat[,257]				#reads extra information in datafile if available
 subjgroup= rawdatamat[,258]
 
 #Set simulation conditions
-maxiter <- 5
-maxsubj <- nrow(rawdatamat)
+maxiter <- 50
+maxsubj <- 88
 lengthvec <- 128-rowSums(rawdatamat[,1:128]==0)
 modelstorun <- 5
 
@@ -57,7 +56,7 @@ finalBICstack <- array(NA, dim=c(maxsubj,1,24))
 
 #Run simulations
 
-for (cursubj in 1:maxsubj){ #for 88 subjects
+for (cursubj in 50:88){ #for 88 subjects
 
   
   curlength=lengthvec[cursubj]
@@ -171,3 +170,31 @@ deckbaseBIC[cursubj]=deckbaseG2[cursubj]+3*log(curlength-1) #왜 1개 빼지? ca
 -2*lengthvec[cursubj]*log(0.25)
 
 ##
+curmod <- 5
+catt33G2 <- array(NA, c(maxsubj, 1, 24)) 
+catt33BIC <- array(NA, c(maxsubj, 1, 24)) 
+for(cursubj in 1:88){
+  curlength=lengthvec[cursubj]
+  curchoices=data.frame(rawdatamat[cursubj,1:curlength])
+  curreinf=data.frame(rawdatamat[cursubj,129:(128+curlength)])
+  
+  
+  catt33G2[cursubj,1,curmod] <- cattG2fun(rep(1/3,3),curchoices)
+  catt33BIC[cursubj,1,curmod] <-catt33G2[cursubj,1,curmod]+3*log(curlength-1)
+}
+
+
+####summarize tables 1:49, 50:88 control/sdi
+r_BIC <- finalBICstack[,,5]
+r_LL <- finalLLstack[,,5]
+r_par <- parstack[,,5]
+r_baseLL <- catt33G2[,,5]
+r_baseBIc <- catt33BIC[,,5]
+
+mean_par <- rbind(control=colMeans(r_par[1:49,]), sdi=colMeans(r_par[50:88,]))
+median_par <- rbind(control=apply(r_par[1:49,],2,median), sdi=apply(r_par[50:88,],2,median))
+sd_par <- rbind(control=apply(r_par[1:49,],2,sd), sdi=apply(r_par[50:88,],2,sd))
+
+BIC_5 <- mean(r_BIC)
+LL_base <- mean(r_baseLL)
+BIC_base <- mean(r_baseBIc)
