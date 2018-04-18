@@ -1,7 +1,7 @@
 ##What's left?
 
-##Compare results with tables
-##Compare results of contrained model with decent iterations
+##Compare results with tables: parameterm stats, BIC
+##
 ##Check sdi group for sd_parameters
 
 rm(list=ls())

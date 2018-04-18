@@ -38,8 +38,8 @@
 rm(list=ls(all=TRUE))  					#clears memory
 
 ### MODIFY THIS SECTION ###
-datname="choices correct Bechara SDIandcontrols.txt"
-maxiter=100 				#Number of starting parameters to iterate through; default is 100
+datname="managed sample data.txt"
+maxiter=10 				#Number of starting parameters to iterate through; default is 100
 modelstorun=5    #lists the nested models that'll be run; #5 is the default, best fitting model in article; use "modelstorun=1:24" to run all (slower)
 parbounds=c(0,0,.01,.01,1,1,5,5)  #lower boundaries for parameters r, p, d, i and upper boundaries for parameters r, p, d, i
 #############################
@@ -57,8 +57,8 @@ rawdatamat=read.table(datname,encoding="UTF-8")
 #If that does not fix the problem, try opening the file in MS Word (using windows default encoding), 
 #delete the unusual characters, and then resave it (again using windows default encoding).
 
-rawdatamat[,257] <- 1:88
-rawdatamat[,258] <- c(rep("SDI",39),rep("Control", 88-39))
+rawdatamat[,257] 
+rawdatamat[,258] 
 subjlabels=rawdatamat[,257]				#reads extra information in datafile if available
 subjgroup= rawdatamat[,258]
 
@@ -69,7 +69,7 @@ lb=parbounds[1:4]			#global variables for bounds (lb=lower bounds, ub=upper boun
 ub=parbounds[5:8]
 
 itercolumns=maxiter
-subjectsmodeled=1:length(rawdatamat[,1])
+subjectsmodeled=1:88#1:length(rawdatamat[,1])
 savelabel=paste("Code17b_",strtrim(datname,6),"_s",min(subjectsmodeled),"-",max(subjectsmodeled),"_iter",maxiter,sep="")
 
 #define a set of 128 match matrices (3 dimensions x 4 decks x 128 trials)
@@ -257,3 +257,5 @@ colnames(G2BICmat)[1:2]=c("subjnum","catt33G2")
 colnames(parfinalmat)=parlabels
 write.table(cbind(G2BICmat,parfinalmat), paste(savelabel,".txt",sep=""))
 save.image(paste(savelabel,".Rdata",sep=""))
+
+##

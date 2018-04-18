@@ -1,11 +1,16 @@
 ---
-title: "Untitled"
+title: "Simulation Output"
 output: html_document
 ---
 
 ##Mean parameters: original code
 ```{r echo=FALSE}
+rm(list=ls())
+library(knitr)
+library(kableExtra)
 load("Code17b_choice_s1-88_iter100.Rdata")
+
+#SDI 1:39, control 40:88
 
 ##Table.3
 dat_sdi <- parstack[1:39,1:3,5]
@@ -38,6 +43,8 @@ kable(t3, format = "html", caption = "Original Code", align="l") %>%
 ```{r echo=FALSE}
 load("DY_MLE.Rdata")
 
+#Control 1:49, SDI 50:88
+
 ##Table.3
 dat_control <- parstack[1:49,1:3,5]
 dat_sdi <- parstack[50:88,1:3,5]
@@ -69,19 +76,10 @@ kable(t3, format = "html", caption = "DY Code", align="l") %>%
 
 ##Mean parameters: deleting i
 ```{r echo=FALSE}
-load("constrained.Rdata")
+load("constrained.RData")
 
 ##Table.3
-dat_control <- parstack[1:49,1:3]
-dat_sdi <- parstack[50:88,1:3]
-mean_s <- apply(dat_sdi,2,mean)
-mean_c <- apply(dat_control,2,mean)
-median_s <- apply(dat_sdi,2,median)
-median_c <- apply(dat_control,2, median)
-sd_s <- apply(dat_sdi, 2, sd)
-sd_c <- apply(dat_control, 2, sd)
-
-t3 <- rbind(mean_c,mean_s,median_c,median_s,sd_c,sd_s)
+t3 <- rbind(mean_par, median_par, sd_par) #duplicated rownames
 t3 <- as.data.frame(t3)
 
 
@@ -100,13 +98,11 @@ kable(t3, format = "html", caption = "Constrained Code", align="l") %>%
 ##BIC comparisons
 ```{r echo=FALSE}
 
-library(knitr)
-library(kableExtra)
         
 #Average BIC
 orgin_BIC <- mean(BICfinalmat[,5])
 DY_BIC <- mean(r_BIC)
-contrained_BIC <- mean()
+contrained_BIC <- mean(BIC_rpd1)
 
 
 ```

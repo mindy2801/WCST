@@ -10,7 +10,7 @@ subjlabels=rawdatamat[,257]				#reads extra information in datafile if available
 subjgroup= rawdatamat[,258]
 
 #Set simulation conditions
-maxiter <- 5
+maxiter <- 50
 maxsubj <- nrow(rawdatamat)
 lengthvec <- 128-rowSums(rawdatamat[,1:128]==0)
 modelstorun <- 5
