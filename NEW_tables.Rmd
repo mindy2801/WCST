@@ -75,11 +75,15 @@ kable(t3, format = "html", caption = "DY Code", align="l") %>%
 
 
 ##Mean parameters: deleting i
+The reason why it has larger sd with d is that here, SDI group had 3 more individuals whose d estimation is 5 instead of 0-1.
+Compared to original result, deleting i creates 5 individuals whose d estimation is very(difference over 3) different.
 ```{r echo=FALSE}
 load("constrained.RData")
 
 ##Table.3
 t3 <- rbind(mean_par, median_par, sd_par) #duplicated rownames
+rownames(t3) <- c("mean_c","mean_s","median_c","median_s","sd_c","sd_s")
+colnames(t3) <- c("r","p","d")
 t3 <- as.data.frame(t3)
 
 
@@ -95,15 +99,5 @@ kable(t3, format = "html", caption = "Constrained Code", align="l") %>%
 
 ```
 
-##BIC comparisons
-```{r echo=FALSE}
 
-        
-#Average BIC
-orgin_BIC <- mean(BICfinalmat[,5])
-DY_BIC <- mean(r_BIC)
-contrained_BIC <- mean(BIC_rpd1)
-
-
-```
 
