@@ -1,7 +1,7 @@
 #only for rpd1
 
 rm(list=ls())
-source("rpd1_function.R")
+source("function_deleted_i.R")
 
 #Set data
 datname="managed sample data.txt"

@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1524635221282.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "233667120",
+    "id" : "1344BD6B",
+    "lastKnownWriteTime" : 1524642498,
+    "last_content_update" : 1524642498272,
+    "path" : "C:/Users/CCSLAB1/Desktop/WCST/ra_prospect.R",
+    "project_path" : "ra_prospect.R",
+    "properties" : {
+        "cursorPosition" : "23,14",
+        "scrollLine" : "14"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

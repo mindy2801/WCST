@@ -1,0 +1,76 @@
+"0","#SDI 1:39, control 40:88
+##Table.3
+dat_sdi <- parstack[1:39,1:3,5]
+dat_control <- parstack[40:88,1:3,5]
+mean_s <- apply(dat_sdi,2,mean)
+mean_c <- apply(dat_control,2,mean)
+median_s <- apply(dat_sdi,2,median)
+median_c <- apply(dat_control,2, median)
+sd_s <- apply(dat_sdi, 2, sd)
+sd_c <- apply(dat_control, 2, sd)
+t3 <- rbind(mean_c,mean_s,median_c,median_s,sd_c,sd_s)
+t3 <- as.data.frame(t3)
+kable(t3, format = ""html"", caption = ""Original Code"", align=""l"") %>%
+  kable_styling(bootstrap_options = ""striped"",
+                full_width = F) %>%
+  add_header_above(c(""Group""=1, ""Parameters"" = 3)) %>%
+  group_rows(""Mean"", 1,2) %>%
+  group_rows(""Median"", 3,4) %>%
+  group_rows(""Standard deviation"", 5,6)
+"
+"1","<table class=""table table-striped"" style=""width: auto !important; margin-left: auto; margin-right: auto;"">
+<caption>Original Code</caption>
+ <thead>
+<tr>
+<th style=""text-align:center; border-bottom:hidden; padding-bottom:0; padding-left:3px;padding-right:3px;"" colspan=""1""><div style=""border-bottom: 1px solid #ddd; padding-bottom: 5px;"">Group</div></th>
+<th style=""text-align:center; border-bottom:hidden; padding-bottom:0; padding-left:3px;padding-right:3px;"" colspan=""3""><div style=""border-bottom: 1px solid #ddd; padding-bottom: 5px;"">Parameters</div></th>
+</tr>
+  <tr>
+   <th style=""text-align:left;"">   </th>
+   <th style=""text-align:left;""> r </th>
+   <th style=""text-align:left;""> p </th>
+   <th style=""text-align:left;""> d </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr grouplength=""2""><td colspan=""4"" style=""border-bottom: 1px solid;""><strong>Mean</strong></td></tr>
+<tr>
+   <td style=""text-align:left; padding-left: 2em;"" indentlevel=""1""> mean_c </td>
+   <td style=""text-align:left;""> 0.8185982 </td>
+   <td style=""text-align:left;""> 0.7835538 </td>
+   <td style=""text-align:left;""> 1.7029209 </td>
+  </tr>
+  <tr>
+   <td style=""text-align:left; padding-left: 2em;"" indentlevel=""1""> mean_s </td>
+   <td style=""text-align:left;""> 0.8472620 </td>
+   <td style=""text-align:left;""> 0.4238261 </td>
+   <td style=""text-align:left;""> 0.3771989 </td>
+  </tr>
+  <tr grouplength=""2""><td colspan=""4"" style=""border-bottom: 1px solid;""><strong>Median</strong></td></tr>
+<tr>
+   <td style=""text-align:left; padding-left: 2em;"" indentlevel=""1""> median_c </td>
+   <td style=""text-align:left;""> 0.9892774 </td>
+   <td style=""text-align:left;""> 0.9805876 </td>
+   <td style=""text-align:left;""> 0.3389431 </td>
+  </tr>
+  <tr>
+   <td style=""text-align:left; padding-left: 2em;"" indentlevel=""1""> median_s </td>
+   <td style=""text-align:left;""> 0.9983284 </td>
+   <td style=""text-align:left;""> 0.2983725 </td>
+   <td style=""text-align:left;""> 0.1827150 </td>
+  </tr>
+  <tr grouplength=""2""><td colspan=""4"" style=""border-bottom: 1px solid;""><strong>Standard deviation</strong></td></tr>
+<tr>
+   <td style=""text-align:left; padding-left: 2em;"" indentLevel=""1""> sd_c </td>
+   <td style=""text-align:left;""> 0.2567951 </td>
+   <td style=""text-align:left;""> 0.3507015 </td>
+   <td style=""text-align:left;""> 2.1321358 </td>
+  </tr>
+  <tr>
+   <td style=""text-align:left; padding-left: 2em;"" indentLevel=""1""> sd_s </td>
+   <td style=""text-align:left;""> 0.2730456 </td>
+   <td style=""text-align:left;""> 0.4296259 </td>
+   <td style=""text-align:left;""> 0.7860304 </td>
+  </tr>
+</tbody>
+</table>"

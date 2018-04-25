@@ -5,7 +5,7 @@
 ##Check sdi group for sd_parameters
 
 rm(list=ls())
-source("probability.R")
+source("function_DY.R")
 
 #Set data
 datname="managed sample data.txt"

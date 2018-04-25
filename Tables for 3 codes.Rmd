@@ -79,7 +79,9 @@ kable(t3, format = "html", caption = "DY Code", align="l") %>%
 load("constrained.RData")
 
 ##Table.3
+
 t3 <- rbind(mean_par, median_par, sd_par) #duplicated rownames
+rownames(t3) <- c("mean_c","mean_s","median_c","median_s","sd_c","sd_s")
 t3 <- as.data.frame(t3)
 
 
@@ -95,15 +97,4 @@ kable(t3, format = "html", caption = "Constrained Code", align="l") %>%
 
 ```
 
-##BIC comparisons
-```{r echo=FALSE}
-
-        
-#Average BIC
-orgin_BIC <- mean(BICfinalmat[,5])
-DY_BIC <- mean(r_BIC)
-contrained_BIC <- mean(BIC_rpd1)
-
-
-```
 
