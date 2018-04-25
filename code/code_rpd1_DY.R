@@ -1,8 +1,4 @@
-##What's left?
 
-##Compare results with tables: parameterm stats, BIC
-##
-##Check sdi group for sd_parameters
 
 rm(list=ls())
 source("function_DY.R")
