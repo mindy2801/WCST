@@ -15,8 +15,22 @@ correctdeckmat=read.table("correctdeck matrix.txt",header=1)
 matchstack=array(rep(0,(3*4*128)),dim=c(3,4,128)) 
 for (i in 1:4) matchstack[,i,] <- array(as.numeric(correctdeckmat[,]==i),dim=c(3,128))
 
+#Calculate baseline model predction: deck-probabilities(4) based on attention(3)
+cattpredp <- matrix(NA, ncol=128, nrow=4) #calculated predicted probabilities of choosing each deck under baseline model
+for(trial in 1:128){
+  cattpredp[,trial]=t(c(1/3,1/3,1/3)%*%matchstack[,,trial])
+}
+
+
+
+
 #Powerrize function
 powerrize=function(pow,tempvec) (tempvec^pow)/sum(tempvec^pow)
+
+#Shaping parameters
+stretchpars=function(opars) -log((param_up-param_low)/(opars-param_low)-1)	#opars=original pars
+contractpars=function(spars) (param_up-param_low)/(exp(-spars)+1)+param_low		#spars=stretched pars
+
 
 #Return 2LL
 rpd1_mle = function(param, tmp_data){
@@ -55,20 +69,30 @@ rpd1_mle = function(param, tmp_data){
   for(i in 1:T){
   choiceprob <- c(choiceprob, predpmat[tmp_data$deck[i],i])
   }
+  choiceprob <- choiceprob*.9998+.0001
   -2*sum(log(choiceprob[-1])) #remove the first trial
-  
-  
 
+}
+
+#Return 2LL for baseline model
+base_mle=function(tmp_data){
+  T <- nrow(tmp_data)
+  choiceprob <- c()
+  
+  for(i in 1:T){
+    choiceprob <- c(choiceprob, cattpredp[tmp_data$deck[i],i])
+  }
+  choiceprob <- choiceprob*.9998+.0001
+  
+  return(-2*sum(log(choiceprob[-1])))
+  
 }
 
 # parameter bounds
 param_low <- c(0, 0, 0); param_up <- c(1, 1, 5);  # lower and upper bounds of r, p, d
-
-# randomly generate initial values for numIter iterations. 
-# param_initial --> a matrix with numIter*3 dimension. Use this for all subjects.
 param_initial = cbind(runif(numIter)*param_up[1], runif(numIter)*param_up[2], runif(numIter)*param_up[3])
 
-global_pars = data.frame(r=NULL, p=NULL, d=NULL, AIC=NULL, BIC=NULL, subjID=NULL, group=NULL)
+global_pars = data.frame(r=NULL, p=NULL, d=NULL, AIC=NULL, BIC=NULL, BaseAIC=NULL, BaseBIC=NULL, subjID=NULL, group=NULL)
 
 # for each subject.. 
 for (i in 1:N) {
@@ -80,8 +104,7 @@ for (i in 1:N) {
   
   for (iter in 1:numIter) {
     # fine MLE estimates of the current subject
-    mle_rpd1 <- optim(param_initial[iter, ], rpd1_mle, method="L-BFGS-B", 
-                             lower=param_low, upper=param_up, tmp_data = tmp_data)
+    mle_rpd1 <- optim(param_initial[iter, ], rpd1_mle, method="Nelder-Mead", tmp_data = tmp_data)
     #print(mle_ra_prospect$value) # for debugging, show outputs
     
     # Replace the results if the latest optimization yields better result
@@ -91,16 +114,25 @@ for (i in 1:N) {
     }
   }
   
+  
+  
   global_pars[i, "r"] = global_mle$par[1]
   global_pars[i, "p"] = global_mle$par[2]
   global_pars[i, "d"] = global_mle$par[3]
   global_pars[i, "AIC"] = global_mle$value + 2*numPars #HAVE TO CHECK FORMULA
-  global_pars[i, "BIC"] = global_mle$value + numPars*log(T-1)
+  global_pars[i, "BIC"] = global_mle$value + numPars*log(T[i]-1)
+  global_pars[i, "Base_AIC"] = base_mle(tmp_data) + 2*numPars
+  global_pars[i, "Base_BIC"] = base_mle(tmp_data) + numPars*log(T[i]-1)
   global_pars[i, "subjID"] = tmp_ID
   global_pars[i, "group"] = tmp_group
   
+  
   cat("End of modeling subject ID =", tmp_ID, "\n")
 }
+
+
+
+
 
 print(global_pars)
 
@@ -112,6 +144,35 @@ print(sum_BIC)
 
 
 
+
+
+
+
+###TEMPORARY
+install.packages("numDeriv")
+library(numDeriv)
+?grad
+grad(rpd1_mle, x=param_initial[10,], tmp_data=tmp_data)
+grad2 <- function(param, tmp_data, fn=rpd1_mle) grad(x=param, func=fn, tmp_data=tmp_data)
+optim(param_initial[1, ], fn=rpd1_mle, gr=grad2, method="L-BFGS-B",lower=param_low, upper=param_up, tmp_data=tmp_data) 
+#I don't think I can use BGFS method here because likelihood is not derived from a continuous function.
+
+#Error in convergence with L-BFGS-B
+#Some problems in gradient of the MLE function?
+
+
+#  $convergence
+#[1] 0
+
+#$message
+#[1] "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL"
+
+#Error:
+#  L-BFGS-B needs finite values of 'fn'
+#non-finite finite-difference value 
+
+
+###
 
 
 
