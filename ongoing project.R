@@ -24,15 +24,15 @@ for(trial in 1:128){
 
 
 
-#Powerrize function
+#Powerrize function. Necessary for parameter 'd'
 powerrize=function(pow,tempvec) (tempvec^pow)/sum(tempvec^pow)
 
-#Shaping parameters
+#Shaping parameter bounds
 stretchpars=function(opars) -log((param_up-param_low)/(opars-param_low)-1)	#opars=original pars
 contractpars=function(spars) (param_up-param_low)/(exp(-spars)+1)+param_low		#spars=stretched pars
 
 
-#Return 2LL
+#Return 2LL under model of interest(rpd1)
 rpd1_mle = function(param, tmp_data){
 
   r = param[1]
@@ -65,7 +65,7 @@ rpd1_mle = function(param, tmp_data){
       predpmat[,t+1] <- t(powerrize(d,curatt)%*%matchstack[,,t+1])
     }
   
-  choiceprob <- c() #initialize probability of actual choices
+  choiceprob <- c() #initialize probability of selected choices
   for(i in 1:T){
   choiceprob <- c(choiceprob, predpmat[tmp_data$deck[i],i])
   }
@@ -74,7 +74,7 @@ rpd1_mle = function(param, tmp_data){
 
 }
 
-#Return 2LL for baseline model
+#Return 2LL under baseline model
 base_mle=function(tmp_data){
   T <- nrow(tmp_data)
   choiceprob <- c()
@@ -119,9 +119,9 @@ for (i in 1:N) {
   global_pars[i, "r"] = global_mle$par[1]
   global_pars[i, "p"] = global_mle$par[2]
   global_pars[i, "d"] = global_mle$par[3]
-  global_pars[i, "AIC"] = global_mle$value + 2*numPars #HAVE TO CHECK FORMULA
+  global_pars[i, "AIC"] = global_mle$value + 2*numPars 
   global_pars[i, "BIC"] = global_mle$value + numPars*log(T[i]-1)
-  global_pars[i, "Base_AIC"] = base_mle(tmp_data) + 2*numPars
+  global_pars[i, "Base_AIC"] = base_mle(tmp_data) + 2*numPars #HAVE TO CHECK FORMULA. What is the number of parameters of the baseline model?
   global_pars[i, "Base_BIC"] = base_mle(tmp_data) + numPars*log(T[i]-1)
   global_pars[i, "subjID"] = tmp_ID
   global_pars[i, "group"] = tmp_group
@@ -148,7 +148,7 @@ print(sum_BIC)
 
 
 
-###TEMPORARY
+###NEED TO CHECK
 install.packages("numDeriv")
 library(numDeriv)
 ?grad
